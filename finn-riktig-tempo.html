@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏃 Finn riktig tempo!</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper:       #f2ecda;
+      --paper-2:     #ede6d1;
+      --ink:         #1a1612;
+      --ink-2:       #3d3830;
+      --ink-3:       #7a7060;
+      --red:         #8b1a1a;
+      --rule-heavy:  3px solid #1a1612;
+      --rule-mid:    1px solid #1a1612;
+      --rule-light:  1px solid #9a907e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+      background: var(--paper);
+      min-height: 100vh;
+      color: var(--ink);
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3.5rem;
+      min-height: 100vh;
+    }
+
+    .container { width: 100%; max-width: 920px; }
+
+    /* ── Masthead ── */
+    .masthead {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .rule-top {
+      border: none;
+      border-top: var(--rule-heavy);
+      margin-bottom: 3px;
+    }
+
+    .rule-top-thin {
+      border: none;
+      border-top: var(--rule-mid);
+      margin-bottom: 0.75rem;
+    }
+
+    .masthead-kicker {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+
+    .masthead-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.2rem, 7vw, 4.2rem);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+
+    .masthead-title .runner { font-style: normal; }
+
+    .masthead-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+      font-variant: small-caps;
+      letter-spacing: 0.1em;
+      color: var(--ink-3);
+      padding: 0.35rem 0;
+      margin-top: 0.4rem;
+      border-top: var(--rule-mid);
+      border-bottom: var(--rule-mid);
+    }
+
+    .rule-bottom-thin { border: none; border-top: var(--rule-mid); margin-top: 3px; }
+    .rule-bottom { border: none; border-top: var(--rule-heavy); margin-top: 3px; margin-bottom: 0; }
+
+    /* ── Main grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 0;
+      align-items: start;
+    }
+
+    @media (max-width: 680px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .left-col  { padding-right: 0; border-right: none; border-bottom: var(--rule-mid); padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+      .dist-card { padding-left: 0; }
+    }
+
+    .left-col {
+      padding-right: 1.75rem;
+      border-right: var(--rule-mid);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Section card ── */
+    .glass-card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 1.25rem 0 1.5rem;
+      box-shadow: none;
+    }
+
+    .glass-card + .glass-card { border-top: var(--rule-light); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: var(--rule-mid);
+    }
+
+    .card-icon { font-size: 0.9rem; }
+
+    .card-header h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--ink);
+    }
+
+    /* ── Speed input ── */
+    .speed-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 0.2rem;
+    }
+
+    .big-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.3rem 0;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: right;
+      outline: none;
+      letter-spacing: -0.02em;
+      min-width: 0;
+    }
+
+    .big-input::placeholder { color: var(--ink-3); font-weight: 400; opacity: 0.5; }
+
+    .big-input::-webkit-outer-spin-button,
+    .big-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .big-input { -moz-appearance: textfield; }
+
+    .unit {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-style: italic;
+      color: var(--ink-3);
+      white-space: nowrap;
+    }
+
+    /* ── Pace ── */
+    .pace-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+
+    .pace-field { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+
+    .pace-num {
+      width: 72px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 0;
+      padding: 0.3rem 0.2rem;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: center;
+      outline: none;
+      letter-spacing: -0.02em;
+      -moz-appearance: textfield;
+    }
+
+    .pace-num::-webkit-outer-spin-button,
+    .pace-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .pace-num::placeholder { color: var(--ink-3); font-weight: 400; opacity: 0.5; }
+
+    .pace-lbl {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      font-style: italic;
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+    }
+
+    .pace-colon {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--red);
+      line-height: 1;
+      padding-bottom: 1.5rem;
+      letter-spacing: -0.05em;
+    }
+
+    .pace-unit {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-style: italic;
+      color: var(--ink-3);
+      white-space: nowrap;
+      padding-bottom: 0.3rem;
+    }
+
+    /* ── Reset ── */
+    .reset-btn {
+      margin-top: 0.5rem;
+      background: transparent;
+      border: var(--rule-mid);
+      border-radius: 0;
+      color: var(--ink-2);
+      font-family: 'Crimson Text', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .reset-btn:hover { background: var(--ink); color: var(--paper); }
+    .reset-btn:active { opacity: 0.8; }
+
+    /* ── Distances card ── */
+    .dist-card {
+      padding-left: 1.75rem;
+      padding-right: 0;
+    }
+
+    .dist-list { display: flex; flex-direction: column; gap: 0; }
+
+    .dist-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.35rem 0;
+      border-bottom: var(--rule-light);
+    }
+
+    .dist-label {
+      flex: 1;
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .dist-badge {
+      font-size: 0.6rem;
+      font-variant: small-caps;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--ink-3);
+    }
+
+    .dist-input {
+      width: 120px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--ink-3);
+      border-radius: 0;
+      padding: 0.2rem 0.3rem;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: right;
+      letter-spacing: 0.04em;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .dist-input:focus { border-bottom: 1px solid var(--red); color: var(--red); }
+
+    .dist-input::placeholder {
+      color: var(--ink-3);
+      font-weight: 400;
+      opacity: 0.5;
+    }
+
+    .dist-divider {
+      border: none;
+      border-top: var(--rule-mid);
+      margin: 0.4rem 0;
+    }
+
+    /* ── Footer hint ── */
+    .hint {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 0.75rem;
+      border-top: var(--rule-mid);
+      font-family: 'Crimson Text', serif;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--ink-3);
+    }
+
+    .hint strong {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    /* ── Track visualization ── */
+    .track-section {
+      margin-top: 1.75rem;
+      padding-top: 1.25rem;
+      border-top: var(--rule-mid);
+    }
+
+    .track-svg {
+      width: 100%;
+      max-width: 560px;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { useState } = React;
+
+  const DISTANCES = [
+    { key: 'd100',  label: '100m',        badge: 'sek', meters: 100,     type: 'sec'      },
+    { key: 'd400',  label: '400m (runde)', badge: 'sek', meters: 400,     type: 'sec'      },
+    { key: 'd600',  label: '600m',         badge: 'sek', meters: 600,     type: 'sec'      },
+    null, // divider
+    { key: 'd1500', label: '1,5K',         badge: 'm:ss', meters: 1500,   type: 'mss'      },
+    { key: 'd3000', label: '3K',           badge: 'm:ss', meters: 3000,   type: 'mss'      },
+    { key: 'd5000', label: '5K',           badge: 'm:ss', meters: 5000,   type: 'mss'      },
+    { key: 'd10k',  label: '10K',          badge: 'm:ss', meters: 10000,  type: 'mss'      },
+    null, // divider
+    { key: 'dhalf', label: 'Halvmaraton',  badge: 'flex', meters: 21097.5, type: 'hmss_flex' },
+    { key: 'dmar',  label: 'Maraton',      badge: 't:mm:ss', meters: 42195, type: 'hmss'   },
+  ];
+
+  const DISTANCE_ITEMS = DISTANCES.filter(Boolean);
+
+  /* ── Formatting ── */
+  function fmtTime(seconds, type) {
+    if (!isFinite(seconds) || seconds <= 0) return '';
+    if (type === 'sec') return seconds.toFixed(1);
+    const t = Math.round(seconds);
+    if (type === 'mss') {
+      const m = Math.floor(t / 60), s = t % 60;
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+    if (type === 'hmss_flex') {
+      if (t < 3600) {
+        const m = Math.floor(t / 60), s = t % 60;
+        return `${m}:${String(s).padStart(2,'0')}`;
+      }
+    }
+    // hmss or hmss_flex >= 3600
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = t % 60;
+    return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  /* ── Parsing ── */
+  function parseTime(str) {
+    if (!str || !str.trim()) return null;
+    str = str.trim().replace(',', '.');
+    // h:mm:ss
+    const a = str.match(/^(\d+):(\d{1,2}):(\d{1,2}(\.\d+)?)$/);
+    if (a) return +a[1]*3600 + +a[2]*60 + parseFloat(a[3]);
+    // m:ss
+    const b = str.match(/^(\d+):(\d{1,2}(\.\d+)?)$/);
+    if (b) return +b[1]*60 + parseFloat(b[2]);
+    // plain seconds
+    const n = parseFloat(str);
+    return isNaN(n) || n <= 0 ? null : n;
+  }
+
+  /* ── Derive all field values from pace (seconds/km) ── */
+  function deriveAll(paceSecsPerKm, skipKey) {
+    const out = {};
+    if (skipKey !== 'speed') {
+      out.speed = (3600 / paceSecsPerKm).toFixed(2);
+    }
+    const skipPace = skipKey === 'paceMin' || skipKey === 'paceSec';
+    if (!skipPace) {
+      out.paceMin = String(Math.floor(paceSecsPerKm / 60));
+      out.paceSec = String(Math.round(paceSecsPerKm % 60)).padStart(2, '0');
+    }
+    DISTANCE_ITEMS.forEach(d => {
+      if (skipKey !== d.key) {
+        out[d.key] = fmtTime(paceSecsPerKm * (d.meters / 1000), d.type);
+      }
+    });
+    return out;
+  }
+
+  /* ── Track visualization ── */
+  function TrackViz({ pace }) {
+    const CX1 = 130, CX2 = 390, CY = 105;
+    const RO = 80, RI = 55, RM = 67.5;
+
+    function trackTime(distKm) {
+      if (!pace || !isFinite(pace)) return '—';
+      return fmtTime(pace * distKm, 'sec');
+    }
+
+    const outerD = `M ${CX1} ${CY-RO} L ${CX2} ${CY-RO} A ${RO} ${RO} 0 0 1 ${CX2} ${CY+RO} L ${CX1} ${CY+RO} A ${RO} ${RO} 0 0 1 ${CX1} ${CY-RO} Z`;
+    const innerD = `M ${CX1} ${CY-RI} L ${CX2} ${CY-RI} A ${RI} ${RI} 0 0 1 ${CX2} ${CY+RI} L ${CX1} ${CY+RI} A ${RI} ${RI} 0 0 1 ${CX1} ${CY-RI} Z`;
+
+    // Outer track edges:  left x=50, right x=470, top y=25, bottom y=185
+    // Dots sit on the centre line (RM=67.5 from axle), 12.5 px inside those edges.
+    // Text is placed 10 px OUTSIDE the edge, so it never touches the track surface.
+    const markers = [
+      {
+        label: '100m', dist: 0.1,
+        dot:  { x: CX1 - RM, y: CY     },   // (62.5, 105)
+        tVal: { x: 38,        y: CY - 7, anchor: 'end'    },  // right of text = x38, left of track edge x50
+        tLbl: { x: 38,        y: CY + 7, anchor: 'end'    },
+        tick: [62.5, CY, 48, CY],            // thin connector to edge
+      },
+      {
+        label: '200m', dist: 0.2,
+        dot:  { x: 260, y: CY - RM     },   // (260, 37.5)
+        tVal: { x: 260, y: 12,  anchor: 'middle' },  // above track top y=25
+        tLbl: { x: 260, y: 23,  anchor: 'middle' },
+        tick: [260, 37.5, 260, 26],
+      },
+      {
+        label: '300m', dist: 0.3,
+        dot:  { x: CX2 + RM, y: CY     },   // (457.5, 105)
+        tVal: { x: 482,       y: CY - 7, anchor: 'start'  },  // left of text = x482, right of track edge x470
+        tLbl: { x: 482,       y: CY + 7, anchor: 'start'  },
+        tick: [457.5, CY, 472, CY],
+      },
+      {
+        label: '400m', dist: 0.4,
+        dot:  { x: 260, y: CY + RM     },   // (260, 172.5)
+        tVal: { x: 260, y: 198, anchor: 'middle' },  // below track bottom y=185
+        tLbl: { x: 260, y: 210, anchor: 'middle' },
+        tick: [260, 172.5, 260, 187],
+      },
+    ];
+
+    return (
+      <div className="track-section">
+        <div className="card-header">
+          <span className="card-icon">🏟️</span>
+          <h2>Løpebane — passeringstider</h2>
+        </div>
+        <svg viewBox="0 0 520 222" className="track-svg" aria-label="Løpebane med passeringstider">
+          {/* Track surface */}
+          <path d={outerD} fill="#d4b080" />
+          {/* Infield */}
+          <path d={innerD} fill="#d0e0b8" />
+          {/* Borders */}
+          <path d={outerD} fill="none" stroke="#1a1612" strokeWidth="1.5" />
+          <path d={innerD} fill="none" stroke="#1a1612" strokeWidth="1" />
+          {/* Finish line: solid black + white dashes on top */}
+          <line x1="260" y1={CY+RI} x2="260" y2={CY+RO} stroke="#1a1612" strokeWidth="4" />
+          <line x1="260" y1={CY+RI} x2="260" y2={CY+RO} stroke="white"   strokeWidth="4" strokeDasharray="4 4" />
+          {/* Markers */}
+          {markers.map(m => {
+            const time = trackTime(m.dist);
+            const active = time !== '—';
+            return (
+              <g key={m.label}>
+                {/* Thin connector from dot to outside track edge */}
+                <line
+                  x1={m.tick[0]} y1={m.tick[1]} x2={m.tick[2]} y2={m.tick[3]}
+                  stroke="#7a6040" strokeWidth="0.8" strokeDasharray="2 2"
+                />
+                <circle
+                  cx={m.dot.x} cy={m.dot.y} r={4.5}
+                  fill={active ? '#1a1612' : '#9a907e'}
+                  stroke="#f2ecda" strokeWidth="1.5"
+                />
+                <text
+                  x={m.tVal.x} y={m.tVal.y}
+                  textAnchor={m.tVal.anchor}
+                  fontSize="12" fontWeight="700"
+                  fontFamily="'Courier Prime','Courier New',monospace"
+                  fill={active ? '#1a1612' : '#9a907e'}
+                >{time}</text>
+                <text
+                  x={m.tLbl.x} y={m.tLbl.y}
+                  textAnchor={m.tLbl.anchor}
+                  fontSize="8"
+                  fontFamily="'Crimson Text',serif"
+                  fill="#3d3830"
+                >{m.label}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  }
+
+  /* ── Initial state ── */
+  const INIT_VALUES = () => ({
+    speed: '', paceMin: '', paceSec: '',
+    ...Object.fromEntries(DISTANCE_ITEMS.map(d => [d.key, '']))
+  });
+
+  /* ── App ── */
+  function App() {
+    const [pace, setPace] = useState(null);
+    const [vals, setVals] = useState(INIT_VALUES);
+
+    function applyPace(newPace, skipKey) {
+      if (!newPace || !isFinite(newPace) || newPace <= 0) return;
+      setPace(newPace);
+      setVals(prev => ({ ...prev, ...deriveAll(newPace, skipKey) }));
+    }
+
+    function onSpeed(e) {
+      const raw = e.target.value;
+      setVals(v => ({ ...v, speed: raw }));
+      const n = parseFloat(raw.replace(',', '.'));
+      if (n > 0) applyPace(3600 / n, 'speed');
+    }
+
+    function onPaceMin(e) {
+      const raw = e.target.value;
+      setVals(v => ({ ...v, paceMin: raw }));
+      const min = parseInt(raw) || 0;
+      const sec = parseInt(vals.paceSec) || 0;
+      const total = min * 60 + sec;
+      if (total > 0) applyPace(total, 'paceMin');
+    }
+
+    function onPaceSec(e) {
+      const raw = e.target.value;
+      setVals(v => ({ ...v, paceSec: raw }));
+      const min = parseInt(vals.paceMin) || 0;
+      const sec = parseInt(raw) || 0;
+      const total = min * 60 + sec;
+      if (total > 0) applyPace(total, 'paceSec');
+    }
+
+    function onDist(key, meters, type, e) {
+      const raw = e.target.value;
+      setVals(v => ({ ...v, [key]: raw }));
+      const secs = parseTime(raw);
+      if (secs && secs > 0) applyPace(secs / (meters / 1000), key);
+    }
+
+    function reset() {
+      setPace(null);
+      setVals(INIT_VALUES());
+    }
+
+    return (
+      <div className="app">
+        <div className="container">
+
+          {/* ── Masthead ── */}
+          <header className="masthead">
+            <hr className="rule-top" />
+            <hr className="rule-top-thin" />
+            <p className="masthead-kicker">Løpar-Tidende &mdash; Fartskalkulator</p>
+            <h1 className="masthead-title">
+              <span className="runner">🏃</span> Finn riktig tempo!
+            </h1>
+            <div className="masthead-meta">
+              <span>Rekn ut tempo, fart og passeringstider</span>
+              <span>&#9670;</span>
+              <span>12. mai 2026</span>
+            </div>
+            <hr className="rule-bottom-thin" />
+            <hr className="rule-bottom" />
+          </header>
+
+          <div className="main-grid">
+            {/* ── Left col ── */}
+            <div className="left-col">
+
+              {/* Speed */}
+              <div className="glass-card">
+                <div className="card-header">
+                  <span className="card-icon">⚡</span>
+                  <h2>Fart</h2>
+                </div>
+                <div className="speed-row">
+                  <input
+                    className="big-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={vals.speed}
+                    onChange={onSpeed}
+                    placeholder="0.00"
+                    aria-label="Fart i kilometer per time"
+                  />
+                  <span className="unit">km/t</span>
+                </div>
+              </div>
+
+              {/* Pace */}
+              <div className="glass-card">
+                <div className="card-header">
+                  <span className="card-icon">⏱️</span>
+                  <h2>Tempo</h2>
+                </div>
+                <div className="pace-row">
+                  <div className="pace-field">
+                    <input
+                      className="pace-num"
+                      type="text"
+                      inputMode="numeric"
+                      value={vals.paceMin}
+                      onChange={onPaceMin}
+                      placeholder="00"
+                      aria-label="Tempo – minuttar"
+                    />
+                    <span className="pace-lbl">min</span>
+                  </div>
+                  <span className="pace-colon">:</span>
+                  <div className="pace-field">
+                    <input
+                      className="pace-num"
+                      type="text"
+                      inputMode="numeric"
+                      value={vals.paceSec}
+                      onChange={onPaceSec}
+                      placeholder="00"
+                      aria-label="Tempo – sekund"
+                    />
+                    <span className="pace-lbl">sek</span>
+                  </div>
+                  <span className="pace-unit">/km</span>
+                </div>
+              </div>
+
+              {/* Reset */}
+              <button className="reset-btn" onClick={reset}>
+                &#8635; Nullstill
+              </button>
+            </div>
+
+            {/* ── Distances card ── */}
+            <div className="glass-card dist-card">
+              <div className="card-header">
+                <span className="card-icon">🏁</span>
+                <h2>Sluttid / Passeringstid</h2>
+              </div>
+              <div className="dist-list">
+                {DISTANCES.map((d, i) =>
+                  d === null
+                    ? <hr key={`div-${i}`} className="dist-divider" />
+                    : (
+                      <div key={d.key} className="dist-row">
+                        <span className="dist-label">{d.label}</span>
+                        <span className="dist-badge">{d.badge}</span>
+                        <input
+                          className="dist-input"
+                          type="text"
+                          inputMode={d.type === 'sec' ? 'decimal' : 'text'}
+                          value={vals[d.key]}
+                          onChange={(e) => onDist(d.key, d.meters, d.type, e)}
+                          placeholder={
+                            d.type === 'sec' ? 'ss.s' :
+                            d.type === 'mss' ? 'm:ss' :
+                            d.type === 'hmss_flex' ? 'm:ss / t:mm:ss' :
+                            't:mm:ss'
+                          }
+                          aria-label={`Tid for ${d.label}`}
+                        />
+                      </div>
+                    )
+                )}
+              </div>
+            </div>
+          </div>
+
+          <TrackViz pace={pace} />
+
+          <p className="hint">
+            Skriv sluttid som <strong>m:ss</strong> eller <strong>t:mm:ss</strong> &middot; 100m, 400m og 600m i sekund
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
